@@ -1,0 +1,32 @@
+[project]
+name = "madr"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Joao-Pedro-P-Holanda",email = "joaopedroph.dev@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard] (>=0.115.14,<0.116.0)",
+    "psycopg (>=3.2.9,<4.0.0)",
+    "sqlalchemy[asyncio] (>=2.0.41,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+taskipy = "^1.14.1"
+ruff = "^0.12.1"
+pytest = "^8.4.1"
+aiosqlite = "^0.21.0"
+
+[tool.taskipy.tasks]
+test = "pytest"
+lint = "ruff check --fix ."
