@@ -30,6 +30,10 @@ taskipy = "^1.14.1"
 ruff = "^0.12.1"
 pytest = "^8.4.1"
 aiosqlite = "^0.21.0"
+freezegun = "^1.5.2"
+factory-boy = "^3.3.3"
+pytest-asyncio = "^1.1.0"
+coverage = "^7.10.4"
 
 [tool.taskipy.tasks]
 test = "pytest"
