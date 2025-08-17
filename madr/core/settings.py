@@ -7,6 +7,9 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
 
+    SECRET_KEY: SecretStr
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRATION_TIME: int
     DATABASE_URI: SecretStr
 
 

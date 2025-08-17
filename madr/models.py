@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from uuid import UUID, uuid4
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import ForeignKey, MetaData, UniqueConstraint
 
 
@@ -28,16 +28,8 @@ class User(Base):
 
     id: Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     name: Mapped[str] = mapped_column()
-    email: Mapped[str] = mapped_column()
+    email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str] = mapped_column()
-
-    def __init__(self, **kw):
-        if "password" not in kw:
-            raise ValueError("User password not provided")
-
-        # TODO: add hash function
-        kw.update({"password": kw["password"]})
-        super().__init__(**kw)
 
 
 class Author(Base):
