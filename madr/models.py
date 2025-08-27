@@ -45,6 +45,12 @@ class Author(Base):
 class Book(Base):
     __tablename__ = "book"
     __table_args__ = (UniqueConstraint("name"),)
+
+    # definindo init que ignora parâmetros extras como mostrado em
+    # https://stackoverflow.com/questions/33790769/option-to-ignore-extra-keywords-in-an-sqlalchemy-mapped-class-constructor
+    def __init__(self, **kwargs):
+        super().__init__(**{k: v for k, v in kwargs.items() if hasattr(type(self), k)})
+
     id: Mapped[int] = mapped_column(primary_key=True)
 
     isbn: Mapped[str | None] = mapped_column()
