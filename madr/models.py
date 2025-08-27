@@ -34,6 +34,7 @@ class User(Base):
 
 class Author(Base):
     __tablename__ = "author"
+    __table_args__ = (UniqueConstraint("name"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -44,9 +45,14 @@ class Author(Base):
 
 class Book(Base):
     __tablename__ = "book"
+    __table_args__ = (UniqueConstraint("name"),)
     id: Mapped[int] = mapped_column(primary_key=True)
 
+    isbn: Mapped[str | None] = mapped_column()
+
     name: Mapped[str] = mapped_column()
+
+    year: Mapped[int] = mapped_column()
 
 
 class BookAuthorship(Base):
