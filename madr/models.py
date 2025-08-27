@@ -18,8 +18,7 @@ meta = MetaData(naming_convention=naming_convention)
 
 class Base(DeclarativeBase):
     metadata = meta
-
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now())
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 
 
 class User(Base):
