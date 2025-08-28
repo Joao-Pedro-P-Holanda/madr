@@ -83,3 +83,5 @@ class AuthorUpdate(BaseModel):
     name: str | None
     nationality: str | None = Field(alias="nacionalidade")
     birth_date: date | None = Field(alias="data-nascimento")
+
+    model_config = ConfigDict(validate_by_name=True)
