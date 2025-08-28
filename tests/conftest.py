@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from faker import Faker
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -7,8 +8,8 @@ from madr.app import app
 from fastapi.testclient import TestClient
 
 from madr.core.database import get_async_session
-from madr.models import Base, Book, User
-from tests.factories import BookCreateFactory, UserCreateFactory
+from madr.models import Author, Base, Book, User
+from tests.factories import AuthorCreateFactory, BookCreateFactory, UserCreateFactory
 
 engine = create_async_engine("sqlite+aiosqlite:///:memory:")
 
@@ -42,6 +43,22 @@ def does_not_raise(e: type[Exception]):
         yield
     except e:
         pytest.fail(f"Raised exception {e}")
+
+
+def get_random_substring(s: str):
+    """
+    Gera uma substring contígua aleatória a partir de uma string base
+    """
+    faker = Faker()
+    positions = list(range(len(s)))
+    substr_start = faker.random_element(positions[:])
+    if substr_start < len(s) - 1:
+        substr_end = faker.random_element(
+            positions[positions.index(substr_start) + 1 :]
+        )
+        return s[substr_start:substr_end]
+    else:
+        return s[substr_start:]
 
 
 @pytest_asyncio.fixture
@@ -96,3 +113,21 @@ async def another_book(session: AsyncSession) -> Book:
     await session.commit()
 
     return book
+
+
+@pytest_asyncio.fixture
+async def existing_author(session: AsyncSession) -> Author:
+    author = Author(**AuthorCreateFactory.create().model_dump())
+    session.add(author)
+    await session.commit()
+
+    return author
+
+
+@pytest_asyncio.fixture
+async def another_author(session: AsyncSession) -> Author:
+    author = Author(**AuthorCreateFactory.create().model_dump())
+    session.add(author)
+    await session.commit()
+
+    return author
