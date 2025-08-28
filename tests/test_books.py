@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from madr.models import Book
 from madr.schema import BookSchema
-from tests.conftest import does_not_raise
+from tests.conftest import does_not_raise, get_random_substring
 from tests.factories import BookCreateFactory
 
 
@@ -23,22 +23,11 @@ def test_get_book_with_invalid_id_fails(existing_book: Book, client: TestClient)
     assert response.status_code == 404
 
 
-def _get_random_substring(s: str):
-    """
-    Gera uma substring contígua aleatória a partir de uma string base
-    """
-    faker = Faker()
-    positions = list(range(len(s)))
-    substr_start = faker.random_element(positions)
-    substr_end = faker.random_element(positions[positions.index(substr_start) + 1 :])
-    return s[substr_start:substr_end]
-
-
 # TODO: com certeza existe uma forma melhor de parametrizar os filtros a serem testados
 filters = [
     # string vazia não vai fazer nenhum filtro
     (("nome", "name"), lambda x: "", lambda x: len(x) == 1),
-    (("nome", "name"), lambda x: _get_random_substring(x), lambda x: len(x) > 0),
+    (("nome", "name"), lambda x: get_random_substring(x), lambda x: len(x) > 0),
     (("nome", "name"), lambda x: x, lambda x: len(x) == 1),
     (
         ("ano-inicial", "year"),
