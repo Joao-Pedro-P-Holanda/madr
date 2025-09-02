@@ -51,7 +51,12 @@ async def get_list(
 
 @router.get("/{id}")
 async def get_one(id: int, session: SessionDep):
-    result = await session.get(Book, id)
+    result = (
+        (await session.execute(select(Book).filter(Book.id == id)))
+        .unique()
+        .scalar_one_or_none()
+    )
+
     if not result:
         raise NotFoundException("Livro")
 
