@@ -7,8 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from madr.core.security import CurrentUserDep
 from madr.deps import SessionDep
 from madr.exceptions import ConflictException, NotFoundException
-from madr.models import Book
-from madr.schema import BookBase, BookCreate, BookSchema, BookUpdate
+from madr.models import Author, Book
+from madr.schema import BookCreate, BookSchema, BookUpdate
 
 router = APIRouter(prefix="/livro", tags=["Livros"])
 
@@ -35,10 +35,16 @@ async def get_list(
     if end_year:
         query = query.filter(Book.year <= end_year)
 
-    results = (await session.execute(query)).scalars()
+    results = (await session.execute(query)).scalars().unique()
 
     return [
-        BookSchema.model_validate(result, from_attributes=True, by_name=True)
+        BookSchema.model_validate(
+            {
+                **result.__dict__,
+                **{"authors_names": [author.name for author in result.authors]},
+            },
+            by_name=True,
+        )
         for result in results
     ]
 
@@ -46,23 +52,62 @@ async def get_list(
 @router.get("/{id}")
 async def get_one(id: int, session: SessionDep):
     result = await session.get(Book, id)
-
     if not result:
         raise NotFoundException("Livro")
 
-    return result
+    return BookSchema.model_validate(
+        {
+            **result.__dict__,
+            "authors_names": [author.name for author in result.authors],
+        },
+        by_name=True,
+    )
 
 
 @router.post("/", status_code=HTTPStatus.CREATED)
 async def create(book: BookCreate, session: SessionDep, _: CurrentUserDep):
     try:
         book_instance = Book(**book.model_dump())
+        authors_to_add = (
+            (
+                await session.execute(
+                    select(Author).filter(Author.id.in_(book.author_ids))
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        if len(authors_to_add) != len(book.author_ids):
+            existing_ids = [author.id for author in authors_to_add]
+
+            unmatched_ids = [
+                author_id
+                for author_id in book.author_ids
+                if author_id not in existing_ids
+            ]
+            raise HTTPException(
+                detail=f"Autores com ids {unmatched_ids} não foram encontrados",
+                status_code=404,
+            )
+
+        book_instance.authors.extend(authors_to_add)
+
         session.add(book_instance)
+
         await session.commit()
 
-        return BookSchema.model_validate(
-            book_instance, from_attributes=True, by_name=True
+        await session.refresh(book_instance)
+
+        response = BookSchema.model_validate(
+            {
+                **book_instance.__dict__,
+                "authors_names": [author.name for author in book_instance.authors],
+            },
+            by_name=True,
         )
+        return response
+
     except IntegrityError:
         raise ConflictException("Livro")
 
@@ -84,13 +129,42 @@ async def update_book(
             .filter(Book.id == id)
             .returning(Book)
         )
+        updated_book = (await session.execute(query)).unique().scalar_one_or_none()
+        if updated_book:
+            if book.author_ids is not None:
+                authors_to_use = (
+                    (
+                        await session.execute(
+                            select(Author).filter(Author.id.in_(book.author_ids))
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+                if len(authors_to_use) != len(book.author_ids):
+                    existing_ids = [author.id for author in authors_to_use]
 
-        updated_author = (await session.execute(query)).scalar_one_or_none()
+                    unmatched_ids = [
+                        author_id
+                        for author_id in book.author_ids
+                        if author_id not in existing_ids
+                    ]
+                    raise HTTPException(
+                        detail=f"Autores com ids {unmatched_ids} não foram encontrados",
+                        status_code=404,
+                    )
+                await session.refresh(updated_book)
+                updated_book.authors = list(authors_to_use)
 
-        if updated_author:
             await session.commit()
-            return BookBase.model_validate(
-                updated_author, from_attributes=True, by_name=True
+            await session.refresh(updated_book)
+
+            return BookSchema.model_validate(
+                {
+                    **updated_book.__dict__,
+                    "authors_names": [author.name for author in updated_book.authors],
+                },
+                by_name=True,
             )
         else:
             raise NotFoundException("Livro")

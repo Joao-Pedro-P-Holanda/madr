@@ -43,25 +43,28 @@ class BookBase(BaseModel):
     isbn: ISBN
     name: Annotated[str, BeforeValidator(sanitize_name)] = Field(alias="nome")
     year: int = Field(alias="ano")
-    author_ids: list[int] = Field(alias="ids_romancistas", default=[])
 
     model_config = ConfigDict(validate_by_name=True)
 
 
-class BookCreate(BookBase): ...
+class BookCreate(BookBase):
+    author_ids: list[int] = Field(alias="ids_romancistas", default=[])
 
 
 class BookUpdate(BaseModel):
-    isbn: ISBN | None
-    name: Annotated[str | None, BeforeValidator(sanitize_name)] = Field(alias="nome")
-    year: int | None = Field(alias="ano")
-    author_ids: list[int] | None = Field(alias="ids_romancistas")
+    isbn: ISBN | None = None
+    name: Annotated[str | None, BeforeValidator(sanitize_name)] = Field(
+        default=None, alias="nome"
+    )
+    year: int | None = Field(default=None, alias="ano")
+    author_ids: list[int] | None = Field(default=None, alias="ids_romancistas")
 
     model_config = ConfigDict(validate_by_name=True)
 
 
 class BookSchema(BookBase):
     id: int
+    authors_names: list[str]
 
 
 class AuthorBase(BaseModel):

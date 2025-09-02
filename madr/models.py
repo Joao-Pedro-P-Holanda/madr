@@ -1,7 +1,9 @@
 from datetime import date, datetime
 from uuid import UUID, uuid4
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy import ForeignKey, MetaData, UniqueConstraint
+from sqlalchemy.util import hybridproperty
 
 
 naming_convention = {
@@ -16,7 +18,7 @@ naming_convention = {
 meta = MetaData(naming_convention=naming_convention)
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     metadata = meta
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 
@@ -58,6 +60,16 @@ class Book(Base):
     name: Mapped[str] = mapped_column()
 
     year: Mapped[int] = mapped_column()
+
+    authors: Mapped[list[Author]] = relationship(
+        lazy="joined", secondary="book_authorship"
+    )
+
+    # TODO: para conseguir usar esse valor no pydantic é necessário pegar o valor da
+    # corrotina de alguma forma, sem async o hybridproperty não funciona com AsyncSession
+    @hybridproperty
+    async def authors_names(self) -> list[str]:
+        return [author.name for author in self.authors]
 
 
 class BookAuthorship(Base):
