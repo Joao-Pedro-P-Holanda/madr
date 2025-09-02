@@ -29,5 +29,8 @@ poetry run fastapi dev madr/app.py
 Os testes podem ser executados com:
 ```poetry run pytest```
 
-### Com 
+### Com Docker
 
+Para rodar a API com Docker basta usar:
+```docker compose up```
+na raiz do projeto
