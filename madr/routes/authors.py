@@ -57,6 +57,10 @@ async def create(author: AuthorCreate, session: SessionDep, _: CurrentUserDep):
                 insert(Author).values(author.model_dump()).returning(Author)
             )
         ).scalar_one()
+
+        await session.commit()
+        await session.refresh(result)
+
         return AuthorSchema.model_validate(result, from_attributes=True, by_name=True)
     except IntegrityError:
         raise ConflictException("Autor")
