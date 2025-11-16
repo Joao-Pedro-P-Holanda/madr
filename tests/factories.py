@@ -2,7 +2,7 @@
 # pyright: reportIncompatibleVariableOverride=false
 import factory
 
-from madr.schema import AuthorCreate, BookCreate, UserCreate
+from app.schema import AuthorCreate, BookCreate, UserCreate
 
 factory.Faker._DEFAULT_LOCALE = "pt_BR"
 

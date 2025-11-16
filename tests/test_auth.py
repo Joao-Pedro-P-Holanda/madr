@@ -6,8 +6,8 @@ from freezegun import freeze_time
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from madr.core.settings import settings
-from madr.models import User
+from app.core.settings import settings
+from app.models import User
 from .factories import UserCreateFactory
 
 

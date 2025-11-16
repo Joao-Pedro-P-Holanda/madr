@@ -4,11 +4,11 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 
-from madr.core.security import CurrentUserDep
-from madr.deps import SessionDep
-from madr.exceptions import ConflictException, NotFoundException
-from madr.models import Author, Book
-from madr.schema import BookCreate, BookSchema, BookUpdate
+from app.core.security import CurrentUserDep
+from app.deps import SessionDep
+from app.exceptions import ConflictException, NotFoundException
+from app.models import Author, Book
+from app.schema import BookCreate, BookSchema, BookUpdate
 
 router = APIRouter(prefix="/livro", tags=["Livros"])
 

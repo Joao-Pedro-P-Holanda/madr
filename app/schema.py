@@ -11,8 +11,8 @@ from pydantic import (
 )
 from pydantic_extra_types.isbn import ISBN
 
-from madr.core.security import hash_password
-from madr.utils.sanitization import sanitize_name
+from app.core.security import hash_password
+from app.utils.sanitization import sanitize_name
 
 
 class AccessToken(BaseModel):

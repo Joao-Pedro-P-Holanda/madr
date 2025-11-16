@@ -2,11 +2,10 @@ from typing import Callable
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 import pytest
-from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from madr.models import Book
-from madr.schema import BookSchema
+from app.models import Book
+from app.schema import BookSchema
 from tests.conftest import does_not_raise, get_random_substring
 from tests.factories import BookCreateFactory
 
@@ -81,6 +80,7 @@ async def test_list_books_paginates_exceeding_results(
     session: AsyncSession, client: TestClient, page_size=20
 ):
     to_create = BookCreateFactory.create_batch(page_size + 1)
+    print(to_create)
     instances = [Book(**create.model_dump()) for create in to_create]
     session.add_all(instances)
     await session.commit()

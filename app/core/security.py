@@ -7,8 +7,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt import DecodeError, encode, decode, ExpiredSignatureError
 from sqlalchemy import select
 
-from madr.deps import SessionDep
-from madr.models import User
+from app.deps import SessionDep
+from app.models import User
 from .settings import settings
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
