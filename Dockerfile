@@ -25,4 +25,4 @@ RUN poetry install --no-interaction --no-ansi --without dev
 EXPOSE 8000
 
 # Run the application on the production server.
-CMD ["poetry", "run", "uvicorn", "--host", "0.0.0.0", "app.app:app"]
+CMD ["poetry", "run", "uvicorn", "--host", "0.0.0.0", "madr.app:app"]

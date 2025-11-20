@@ -5,8 +5,8 @@ from pydantic import ValidationError
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Author
-from app.schema import AuthorSchema
+from madr.models import Author
+from madr.schema import AuthorSchema
 from tests.conftest import does_not_raise, get_random_substring
 from tests.factories import AuthorCreateFactory
 

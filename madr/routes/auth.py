@@ -7,15 +7,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
-from app.core.security import (
+from madr.core.security import (
     CurrentUserDep,
     create_access_token,
     verify_password_hash,
 )
-from app.deps import SessionDep
-from app.exceptions import ConflictException, invalid_permission_exception
-from app.models import User as UserTable
-from app.schema import AccessToken, UserCreate, UserSchema
+from madr.deps import SessionDep
+from madr.exceptions import ConflictException, invalid_permission_exception
+from madr.models import User as UserTable
+from madr.schema import AccessToken, UserCreate, UserSchema
 
 router = APIRouter(tags=["Conta"])
 

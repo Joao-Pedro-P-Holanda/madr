@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import auth, authors, books
+from madr.routes import auth, authors, books
 import uvicorn
 
 app = FastAPI()

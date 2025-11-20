@@ -23,7 +23,7 @@ Seguido de :
 O comando para iniciar a API é:
 ```sh
 # para o modo de produção é só substituir fastapi dev por fastapi run
-poetry run fastapi dev app/app.py
+poetry run fastapi dev madr/app.py
 ``` 
 
 Os testes podem ser executados com:
