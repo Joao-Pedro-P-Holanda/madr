@@ -8,7 +8,8 @@ from madr.app import app
 from fastapi.testclient import TestClient
 
 from madr.core.database import get_async_session
-from madr.models import Author, Base, Book, User
+from madr.core.orm.mapping import init_mappings, mapping_registry, remove_mappings
+from madr.models import Author, Book, User
 from tests.factories import AuthorCreateFactory, BookCreateFactory, UserCreateFactory
 
 engine = create_async_engine("sqlite+aiosqlite:///:memory:")
@@ -19,11 +20,13 @@ sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
 @pytest_asyncio.fixture
 async def session():
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(mapping_registry.metadata.drop_all)
+        await conn.run_sync(mapping_registry.metadata.create_all)
 
     async with sessionmaker() as session:
+        init_mappings()
         yield session
+        remove_mappings()
 
 
 @pytest.fixture
@@ -32,6 +35,8 @@ def client(session: AsyncSession):
         return session
 
     app.dependency_overrides[get_async_session] = session_override
+    # mapeamento imperativo é controlado na fixture session, por isso
+    # client não está em um bloco with que faria o lifespan executar
     client = TestClient(app)
     return client
 
@@ -62,7 +67,7 @@ def get_random_substring(s: str):
 
 
 @pytest_asyncio.fixture
-async def existing_user(session: AsyncSession) -> User:
+async def existing_user(client, session: AsyncSession) -> User:
     result = (
         await session.execute(
             insert(User)
@@ -76,7 +81,7 @@ async def existing_user(session: AsyncSession) -> User:
 
 
 @pytest_asyncio.fixture
-async def another_user(session: AsyncSession) -> User:
+async def another_user(client, session: AsyncSession) -> User:
     result = (
         await session.execute(
             insert(User)
@@ -99,7 +104,7 @@ def token(existing_user: User, client: TestClient) -> str:
 
 @pytest_asyncio.fixture
 async def existing_book(session: AsyncSession) -> Book:
-    book = Book(**BookCreateFactory.create().model_dump())
+    book = Book(**BookCreateFactory.create().model_dump(exclude={"author_ids"}))
     session.add(book)
     await session.commit()
 
@@ -108,7 +113,7 @@ async def existing_book(session: AsyncSession) -> Book:
 
 @pytest_asyncio.fixture
 async def another_book(session: AsyncSession) -> Book:
-    book = Book(**BookCreateFactory.create().model_dump())
+    book = Book(**BookCreateFactory.create().model_dump(exclude={"author_ids"}))
     session.add(book)
     await session.commit()
 

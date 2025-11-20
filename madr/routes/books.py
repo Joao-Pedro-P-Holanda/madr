@@ -72,7 +72,7 @@ async def get_one(id: int, session: SessionDep):
 @router.post("/", status_code=HTTPStatus.CREATED)
 async def create(book: BookCreate, session: SessionDep, _: CurrentUserDep):
     try:
-        book_instance = Book(**book.model_dump())
+        book_instance = Book(**book.model_dump(exclude={"author_ids"}))
         authors_to_add = (
             (
                 await session.execute(

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from madr.core.settings import settings
-from madr.models import Base
+from madr.core.orm.mapping import mapping_registry
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,7 +24,7 @@ config.set_main_option("sqlalchemy.url", settings.DATABASE_URI.get_secret_value(
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = mapping_registry.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

@@ -81,7 +81,9 @@ async def test_list_books_paginates_exceeding_results(
     session: AsyncSession, client: TestClient, page_size=20
 ):
     to_create = BookCreateFactory.create_batch(page_size + 1)
-    instances = [Book(**create.model_dump()) for create in to_create]
+    instances = [
+        Book(**create.model_dump(exclude={"author_ids"})) for create in to_create
+    ]
     session.add_all(instances)
     await session.commit()
 
