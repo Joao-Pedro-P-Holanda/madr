@@ -23,7 +23,6 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "taskipy>=1.14.1,<2",
     "ruff>=0.12.1,<0.13",
     "pytest>=8.4.1,<9",
     "aiosqlite>=0.21.0,<0.22",
@@ -38,7 +37,3 @@ package = false
 
 [tool.fastapi]
 entrypoint= "madr.app:app"
-
-[tool.taskipy.tasks]
-test = "pytest"
-lint = "ruff check --fix ."
