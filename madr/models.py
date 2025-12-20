@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
 
 
@@ -9,6 +9,7 @@ class User:
     name: str
     email: str
     password: str
+    created_at: datetime = field(init=False)
 
 
 @dataclass
@@ -18,6 +19,7 @@ class Author:
     name: str
     nationality: str
     birth_date: date
+    created_at: datetime = field(init=False)
 
 
 @dataclass
@@ -28,3 +30,4 @@ class Book:
     year: int
     isbn: str | None = None
     authors: list[Author] = field(default_factory=list)
+    created_at: datetime = field(init=False)

@@ -1,20 +1,24 @@
 from http import HTTPStatus
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import delete, select, update
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import delete, select, update, func
 from sqlalchemy.exc import IntegrityError
+from starlette.responses import JSONResponse
 
 from madr.core.security import CurrentUserDep
 from madr.deps import SessionDep
 from madr.exceptions import ConflictException, NotFoundException
 from madr.models import Author, Book
 from madr.schema import BookCreate, BookSchema, BookUpdate
+from madr.utils.caching import get_last_modified_response
 
 router = APIRouter(prefix="/livro", tags=["Livros"])
 
 
 @router.get("/")
 async def get_list(
+    request: Request,
     session: SessionDep,
     name: Annotated[str | None, Query(alias="nome")] = None,
     start_year: Annotated[int | None, Query(alias="ano-inicial")] = None,
@@ -22,6 +26,15 @@ async def get_list(
     limit: Annotated[int, Query(alias="limite")] = 20,
     offset: Annotated[int, Query(alias="deslocamento")] = 0,
 ):
+    last_modified = (
+        await session.execute(select(func.max(Book.created_at)))
+    ).scalar_one_or_none()
+
+    cache_response = get_last_modified_response(last_modified, request)
+
+    if cache_response:
+        return cache_response
+
     query = select(Book).limit(limit).offset(offset)
 
     if name:
@@ -37,16 +50,21 @@ async def get_list(
 
     results = (await session.execute(query)).scalars().unique()
 
-    return [
-        BookSchema.model_validate(
-            {
-                **result.__dict__,
-                **{"authors_names": [author.name for author in result.authors]},
-            },
-            by_name=True,
-        )
-        for result in results
-    ]
+    return JSONResponse(
+        content=jsonable_encoder(
+            [
+                BookSchema.model_validate(
+                    {
+                        **result.__dict__,
+                        **{"authors_names": [author.name for author in result.authors]},
+                    },
+                    by_name=True,
+                )
+                for result in results
+            ]
+        ),
+        headers={"Last-Modified": last_modified.isoformat()} if last_modified else None,
+    )
 
 
 @router.get("/{id}")

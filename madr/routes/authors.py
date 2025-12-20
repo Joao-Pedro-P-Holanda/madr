@@ -1,8 +1,10 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import delete, insert, select, update
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
 from madr.core.security import CurrentUserDep
@@ -10,17 +12,28 @@ from madr.deps import SessionDep
 from madr.exceptions import ConflictException, NotFoundException
 from madr.models import Author
 from madr.schema import AuthorCreate, AuthorSchema, AuthorUpdate
+from madr.utils.caching import get_last_modified_response
 
 router = APIRouter(prefix="/romancista", tags=["Autores"])
 
 
 @router.get("/")
 async def get_list(
+    request: Request,
     session: SessionDep,
     name: Annotated[str | None, Query(alias="nome")] = None,
     limit: Annotated[int, Query(alias="limite")] = 20,
     offset: Annotated[int, Query(alias="deslocamento")] = 0,
 ):
+    last_modified = (
+        await session.execute(select(func.max(Author.created_at)))
+    ).scalar_one_or_none()
+
+    cache_response = get_last_modified_response(last_modified, request)
+
+    if cache_response:
+        return cache_response
+
     query = select(Author).limit(limit).offset(offset)
 
     if name:
@@ -30,10 +43,15 @@ async def get_list(
 
     results = (await session.execute(query)).scalars()
 
-    return [
-        AuthorSchema.model_validate(result, from_attributes=True, by_name=True)
-        for result in results
-    ]
+    return JSONResponse(
+        content=jsonable_encoder(
+            [
+                AuthorSchema.model_validate(result, from_attributes=True, by_name=True)
+                for result in results
+            ]
+        ),
+        headers={"Last-Modified": last_modified.isoformat()} if last_modified else None,
+    )
 
 
 @router.get("/{id}")
