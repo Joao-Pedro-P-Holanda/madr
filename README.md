@@ -12,22 +12,22 @@ Algumas coisas extras que incluí foram:
 
 ## Execução
 
-### Com poetry
+### Com UV
 
 A configuração inicial é feita com:
-```poetry sync```
+```uv sync```
 
 Seguido de :
-```poetry rub alembic upgrade head```
+```uv run alembic upgrade head```
 
 O comando para iniciar a API é:
 ```sh
 # para o modo de produção é só substituir fastapi dev por fastapi run
-poetry run fastapi dev madr/app.py
+uv run fastapi dev 
 ``` 
 
 Os testes podem ser executados com:
-```poetry run pytest```
+```uv run pytest```
 
 ### Com Docker
 
