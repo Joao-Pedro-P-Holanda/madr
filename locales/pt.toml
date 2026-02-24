@@ -1,0 +1,19 @@
+[exceptions]
+
+not_found = ""
+wrong_credentials = "Usuário ou senha incorretos"
+unauthorized = "Não autorizado"
+conflict = "{} já consta no MADR"
+delete = "Falha ao deletar {}"
+missing_related = "{} com ids {} não encontrados"
+
+[entities]
+
+user = "Usuário"
+book = "Livro"
+author = "Autor"
+
+[success]
+
+delete = "{} deletado(a) com sucesso"
+

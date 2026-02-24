@@ -2,7 +2,6 @@ from typing import Callable
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 import pytest
-from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from madr.models import Book
@@ -70,7 +69,7 @@ def test_list_books_can_apply_filter(
 
 
 def test_list_books_returns_empty_without_books(client: TestClient):
-    response = client.get(f"/livro")
+    response = client.get("/livro")
 
     assert response.status_code == 200
     assert len(response.json()) == 0
@@ -155,7 +154,7 @@ def test_authenticated_user_can_not_update_unexisting_book(
     token: str, existing_book: Book, client: TestClient
 ):
     response = client.patch(
-        f"/livro/-1",
+        "/livro/-1",
         headers={"Authorization": f"Bearer {token}"},
         json=BookCreateFactory().model_dump(),
     )
@@ -191,7 +190,7 @@ def test_authenticated_user_can_not_delete_unexisting_book(
     token: str, client: TestClient
 ):
     delete_response = client.delete(
-        f"/livro/1", headers={"Authorization": f"Bearer {token}"}
+        "/livro/1", headers={"Authorization": f"Bearer {token}"}
     )
 
     assert delete_response.status_code == 404

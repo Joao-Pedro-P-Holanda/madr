@@ -12,8 +12,8 @@ from madr.core.security import (
     create_access_token,
     verify_password_hash,
 )
-from madr.deps import SessionDep
-from madr.exceptions import ConflictException, invalid_permission_exception
+from madr.deps import I18nDep, SessionDep
+from madr.exceptions import ConflictException
 from madr.models import User as UserTable
 from madr.schema import AccessToken, UserCreate, UserSchema
 
@@ -28,6 +28,7 @@ async def account_info(current_user: CurrentUserDep):
 @router.post("/token")
 async def login(
     form: Annotated[OAuth2PasswordRequestForm, Depends()],
+    i18n: I18nDep,
     session: SessionDep,
 ):
     query = select(UserTable).where(UserTable.email == form.username)
@@ -37,7 +38,8 @@ async def login(
         plain_password=form.password, hashed_password=user.password
     ):
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail="Email ou senha incorretos"
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=i18n["exceptions"]["wrong_credentials"],
         )
 
     token = create_access_token({"sub": user.email})
@@ -52,7 +54,7 @@ async def refresh_token(current_user: CurrentUserDep):
 
 
 @router.post("/conta", status_code=HTTPStatus.CREATED)
-async def sign_up(user: UserCreate, session: SessionDep):
+async def sign_up(user: UserCreate, i18n: I18nDep, session: SessionDep):
     try:
         query = insert(UserTable).values(user.model_dump()).returning(UserTable)
         result = (await session.execute(query)).scalar_one()
@@ -63,19 +65,23 @@ async def sign_up(user: UserCreate, session: SessionDep):
 
         return serialized_result
     except IntegrityError:
-        raise ConflictException(entity="Usuário")
+        raise ConflictException(entity="user", i18n=i18n)
 
 
 @router.put("/conta/{id}")
 async def update_account(
     user: UserCreate,
     id: UUID,
+    i18n: I18nDep,
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
     try:
         if id != current_user.id:
-            raise invalid_permission_exception
+            raise HTTPException(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                detail=i18n["exceptions"]["unauthorized"],
+            )
 
         query = (
             update(UserTable)
@@ -94,23 +100,28 @@ async def update_account(
         return serialized_result
 
     except IntegrityError:
-        raise ConflictException(entity="Usuário")
+        raise ConflictException(entity="user", i18n=i18n)
 
 
 @router.delete("/conta/{id}")
-async def delete_account(id: UUID, session: SessionDep, current_user: CurrentUserDep):
+async def delete_account(
+    id: UUID, i18n: I18nDep, session: SessionDep, current_user: CurrentUserDep
+):
     if id != current_user.id:
-        raise invalid_permission_exception
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail=i18n["exceptions"]["unauthorized"],
+        )
 
     query = delete(UserTable).filter(UserTable.id == id)
     deleted_rows = (await session.execute(query)).rowcount
 
     if deleted_rows == 1:
         await session.commit()
-        return {"message": "Conta deletada com sucesso"}
+        return i18n["success"]["delete"].format(i18n["entities"]["user"])
     else:
         await session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="Falha ao deletar a conta",
+            detail=i18n["exceptions"]["delete"].format(i18n["entities"]["user"]),
         )

@@ -32,5 +32,8 @@ class Settings(BaseSettings):
     DATABASE_HOST: str = "localhost"
     DATABASE_PORT: int = 5432
 
+    SUPPORTED_LOCALES: list[str] = ["en", "pt"]
+    DEFAULT_LOCALE: str = "pt"
+
 
 settings = Settings()  # pyright: ignore[reportCallIssue]

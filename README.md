@@ -9,6 +9,7 @@ Algumas coisas extras que incluí foram:
 - Relação muitos para muitos de autores e livros
 - Sanitização como `BeforeValidator` nos campos de nome
 - Verificação dos schemas nos testes
+- Internacionalização automática a partir do cabeçalho `Accept-Language`
 
 ## Execução
 

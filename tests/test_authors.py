@@ -1,4 +1,3 @@
-from _pytest.mark import param
 from faker import Faker
 from fastapi.testclient import TestClient
 from pydantic import ValidationError

@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette.responses import JSONResponse
 
 from madr.core.security import CurrentUserDep
-from madr.deps import SessionDep
+from madr.deps import I18nDep, SessionDep
 from madr.exceptions import ConflictException, NotFoundException
 from madr.models import Author, Book
 from madr.schema import BookCreate, BookSchema, BookUpdate
@@ -68,7 +68,7 @@ async def get_list(
 
 
 @router.get("/{id}")
-async def get_one(id: int, session: SessionDep):
+async def get_one(id: int, i18n: I18nDep, session: SessionDep):
     result = (
         (await session.execute(select(Book).filter(Book.id == id)))
         .unique()
@@ -76,7 +76,7 @@ async def get_one(id: int, session: SessionDep):
     )
 
     if not result:
-        raise NotFoundException("Livro")
+        raise NotFoundException(entity="book", i18n=i18n)
 
     return BookSchema.model_validate(
         {
@@ -88,7 +88,9 @@ async def get_one(id: int, session: SessionDep):
 
 
 @router.post("/", status_code=HTTPStatus.CREATED)
-async def create(book: BookCreate, session: SessionDep, _: CurrentUserDep):
+async def create(
+    book: BookCreate, i18n: I18nDep, session: SessionDep, _: CurrentUserDep
+):
     try:
         book_instance = Book(**book.model_dump(exclude={"author_ids"}))
         authors_to_add = (
@@ -110,7 +112,9 @@ async def create(book: BookCreate, session: SessionDep, _: CurrentUserDep):
                 if author_id not in existing_ids
             ]
             raise HTTPException(
-                detail=f"Autores com ids {unmatched_ids} não foram encontrados",
+                detail=i18n["exceptions"]["missing_related"].format(
+                    i18n["entities"]["author"], unmatched_ids
+                ),
                 status_code=404,
             )
 
@@ -132,12 +136,12 @@ async def create(book: BookCreate, session: SessionDep, _: CurrentUserDep):
         return response
 
     except IntegrityError:
-        raise ConflictException("Livro")
+        raise ConflictException(entity="book", i18n=i18n)
 
 
 @router.patch("/{id}")
 async def update_book(
-    id: int, book: BookUpdate, session: SessionDep, _: CurrentUserDep
+    id: int, book: BookUpdate, i18n: I18nDep, session: SessionDep, _: CurrentUserDep
 ):
     try:
         query = (
@@ -173,7 +177,9 @@ async def update_book(
                         if author_id not in existing_ids
                     ]
                     raise HTTPException(
-                        detail=f"Autores com ids {unmatched_ids} não foram encontrados",
+                        detail=i18n["exceptions"]["missing_related"].format(
+                            i18n["entities"]["author"], unmatched_ids
+                        ),
                         status_code=404,
                     )
                 await session.refresh(updated_book)
@@ -190,23 +196,23 @@ async def update_book(
                 by_name=True,
             )
         else:
-            raise NotFoundException("Livro")
+            raise NotFoundException(entity="book", i18n=i18n)
     except IntegrityError:
-        raise ConflictException("Livro")
+        raise ConflictException(entity="book", i18n=i18n)
 
 
 @router.delete("/{id}")
-async def delete_book(id: int, session: SessionDep, _: CurrentUserDep):
+async def delete_book(id: int, i18n: I18nDep, session: SessionDep, _: CurrentUserDep):
     deleted_rows = (await session.execute(delete(Book).filter(Book.id == id))).rowcount
 
     if deleted_rows == 1:
         await session.commit()
-        return {"message": "Livro deletado no MADR"}
+        return {"message": i18n["success"]["delete"].format(i18n["entities"]["book"])}
     elif deleted_rows == 0:
-        raise NotFoundException("Livro")
+        raise NotFoundException(entity="book", i18n=i18n)
     else:
         await session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="Falha ao deletar livro",
+            detail=i18n["exceptions"]["delete"].format(i18n["entities"]["book"]),
         )

@@ -1,16 +1,8 @@
+from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Annotated, Any
 from typing_extensions import Doc
 from fastapi.exceptions import HTTPException
-
-
-wrong_credentials_exception = HTTPException(
-    status_code=HTTPStatus.BAD_REQUEST, detail="Email ou senha incorretos"
-)
-
-invalid_permission_exception = HTTPException(
-    status_code=HTTPStatus.UNAUTHORIZED, detail="Não autorizado"
-)
 
 
 class NotFoundException(HTTPException):
@@ -22,6 +14,12 @@ class NotFoundException(HTTPException):
                     Name of the missing entity.
                     """),
         ],
+        i18n: Annotated[
+            Mapping[str, Any],
+            Doc("""
+                    Translation keys
+                    """),
+        ],
         headers: Annotated[
             dict[str, str] | None,
             Doc("""
@@ -31,7 +29,7 @@ class NotFoundException(HTTPException):
     ) -> None:
         super().__init__(
             status_code=HTTPStatus.NOT_FOUND,
-            detail=f"{entity} não consta no MADR",
+            detail=i18n["exceptions"]["not_found"].format(i18n["entities"][entity]),
             headers=headers,
         )
 
@@ -45,6 +43,12 @@ class ConflictException(HTTPException):
                     Name of the conflicting entity.
                     """),
         ],
+        i18n: Annotated[
+            Mapping[str, Any],
+            Doc("""
+                    Translation keys
+                    """),
+        ],
         headers: Annotated[
             dict[str, str] | None,
             Doc("""
@@ -54,6 +58,6 @@ class ConflictException(HTTPException):
     ) -> None:
         super().__init__(
             status_code=HTTPStatus.CONFLICT,
-            detail=f"{entity} já consta no MADR",
+            detail=i18n["exceptions"]["conflict"].format(i18n["entities"][entity]),
             headers=headers,
         )

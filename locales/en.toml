@@ -1,0 +1,20 @@
+[exceptions]
+
+not_found = ""
+wrong_credentials = "Invalid username or password"
+unauthorized = "Unauthorized"
+conflict = "{} already exists on MADR"
+delete = "Could not delete {}"
+missing_related = "{} with ids {} not found"
+
+[entities]
+
+user = "User"
+book = "Book"
+author = "Author"
+
+[success]
+
+delete = "{} deleted successfully"
+
+

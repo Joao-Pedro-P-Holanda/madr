@@ -8,7 +8,7 @@ from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
 from madr.core.security import CurrentUserDep
-from madr.deps import SessionDep
+from madr.deps import I18nDep, SessionDep
 from madr.exceptions import ConflictException, NotFoundException
 from madr.models import Author
 from madr.schema import AuthorCreate, AuthorSchema, AuthorUpdate
@@ -57,18 +57,21 @@ async def get_list(
 @router.get("/{id}")
 async def get_one(
     id: int,
+    i18n: I18nDep,
     session: SessionDep,
 ):
     result = await session.get(Author, id)
 
     if not result:
-        raise NotFoundException("Autor")
+        raise NotFoundException(entity="author", i18n=i18n)
 
     return AuthorSchema.model_validate(result, from_attributes=True, by_name=True)
 
 
 @router.post("/", status_code=HTTPStatus.CREATED)
-async def create(author: AuthorCreate, session: SessionDep, _: CurrentUserDep):
+async def create(
+    author: AuthorCreate, i18n: I18nDep, session: SessionDep, _: CurrentUserDep
+):
     try:
         result = (
             await session.execute(
@@ -81,12 +84,12 @@ async def create(author: AuthorCreate, session: SessionDep, _: CurrentUserDep):
 
         return AuthorSchema.model_validate(result, from_attributes=True, by_name=True)
     except IntegrityError:
-        raise ConflictException("Autor")
+        raise ConflictException(entity="author", i18n=i18n)
 
 
 @router.patch("/{id}")
 async def update_author(
-    author: AuthorUpdate, id: int, session: SessionDep, _: CurrentUserDep
+    author: AuthorUpdate, id: int, i18n: I18nDep, session: SessionDep, _: CurrentUserDep
 ):
     try:
         query = (
@@ -104,25 +107,25 @@ async def update_author(
                 updated_author, from_attributes=True, by_name=True
             )
         else:
-            raise NotFoundException("Autor")
+            raise NotFoundException(entity="author", i18n=i18n)
     except IntegrityError:
-        raise ConflictException("Autor")
+        raise ConflictException(entity="author", i18n=i18n)
 
 
 @router.delete("/{id}")
-async def delete_author(id: int, session: SessionDep, _: CurrentUserDep):
+async def delete_author(id: int, i18n: I18nDep, session: SessionDep, _: CurrentUserDep):
     deleted_rows = (
         await session.execute(delete(Author).filter(Author.id == id))
     ).rowcount
 
     if deleted_rows == 1:
         await session.commit()
-        return {"message": "Romancista deletado no MADR"}
+        return {"message": i18n["success"]["delete"].format(i18n["entities"]["author"])}
     elif deleted_rows == 0:
-        raise NotFoundException("Autor")
+        raise NotFoundException(entity="author", i18n=i18n)
     else:
         await session.rollback()
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="Falha ao deletar autor",
+            detail=i18n["exceptions"]["delete"].format(i18n["entities"]["author"]),
         )
