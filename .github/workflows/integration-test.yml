@@ -14,7 +14,6 @@ jobs:
         python-version:
           - "3.13"
     env:
-      UV_PYTHON: ${{ matrix.python-version }}
       DATABASE_USER: "stub"
       DATABASE_PASSWORD: "stub"
       DATABASE_NAME: "stub"
@@ -22,15 +21,14 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
     steps:
     - uses: actions/checkout@v4
-
-    - name: Setup uv
-      uses: astral-sh/setup-uv@v5
+    - uses: actions/setup-python@v6
       with:
-          version: "0.5.13"
-          enable-cache: true
-          cache-dependency-glob: |
-            uv.lock
+          python-version: ${{ matrix.python-version }}
+          cache: 'poetry'
 
-    - run: uv sync --all-extras --group dev
-    - run: uv run pytest
+    - name: Install poetry
+      run: pipx install poetry
+
+    - run: poetry sync 
+    - run: poetry run pytest
 
