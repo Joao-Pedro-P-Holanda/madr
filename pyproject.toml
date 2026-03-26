@@ -32,5 +32,9 @@ dev = [
     "coverage==7.13.5",
 ]
 
+
+[tool.poetry]
+package-mode = false
+
 [tool.fastapi]
 entrypoint= "madr.app:app"

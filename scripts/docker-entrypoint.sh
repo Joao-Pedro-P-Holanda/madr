@@ -1,3 +1,3 @@
 #!/bin/sh
-uv run alembic upgrade head
-uv run uvicorn --host 0.0.0.0 madr.app:app
+poetry run alembic upgrade head
+poety run uvicorn --host 0.0.0.0 madr.app:app

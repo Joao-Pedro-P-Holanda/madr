@@ -11,12 +11,12 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN pip install uv
+RUN pip install poetry==2.3.2
 
-COPY ./uv.lock /app/uv.lock
+COPY ./poetry.lock /app/poetry.lock
 COPY ./pyproject.toml /app/pyproject.toml
 
-RUN uv sync --locked --no-dev
+RUN poetry sync --without=dev
 
 # Copy the source code into the container.
 COPY . .
@@ -25,4 +25,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the application on the production server.
-CMD ["uv", "run", "uvicorn", "--host", "0.0.0.0", "madr.app:app"]
+CMD ["poetry", "run", "uvicorn", "--host", "0.0.0.0", "madr.app:app"]
