@@ -34,11 +34,16 @@ def create_access_token(data: dict):
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password=password)
+    return pwd_context.hash(
+        password=password + settings.PASSWORD_PEPPER.get_secret_value()
+    )
 
 
 def verify_password_hash(plain_password: str, hashed_password: str):
-    return pwd_context.verify(password=plain_password, hash=hashed_password)
+    return pwd_context.verify_and_update(
+        password=plain_password + settings.PASSWORD_PEPPER.get_secret_value(),
+        hash=hashed_password,
+    )
 
 
 async def get_current_user(

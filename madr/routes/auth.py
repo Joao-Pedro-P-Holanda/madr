@@ -1,4 +1,6 @@
 from http import HTTPStatus
+import random
+import string
 from typing import Annotated
 from uuid import UUID
 
@@ -10,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from madr.core.security import (
     CurrentUserDep,
     create_access_token,
+    hash_password,
     verify_password_hash,
 )
 from madr.deps import I18nDep, SessionDep
@@ -34,13 +37,30 @@ async def login(
     query = select(UserTable).where(UserTable.email == form.username)
     user = await session.scalar(query)
 
-    if not user or not verify_password_hash(
-        plain_password=form.password, hashed_password=user.password
-    ):
+    # Utilizando um hash de stub para evitar ataques temporais quando o usuário não existe
+    if not user:
+        _ = verify_password_hash(
+            plain_password=hash_password("a" * 10),
+            hashed_password=hash_password("b" * 10),
+        )
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail=i18n["exceptions"]["wrong_credentials"],
         )
+
+    matches, new_hash = verify_password_hash(
+        plain_password=form.password, hashed_password=user.password
+    )
+
+    if not matches:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=i18n["exceptions"]["wrong_credentials"],
+        )
+
+    if new_hash:
+        user.password = new_hash
+        session.add(user)
 
     token = create_access_token({"sub": user.email})
 

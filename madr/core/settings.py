@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     SECRET_KEY: SecretStr
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_TIME: int
+    PASSWORD_PEPPER: SecretStr
 
     @computed_field
     @property

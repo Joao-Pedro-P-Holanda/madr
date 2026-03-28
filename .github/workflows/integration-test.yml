@@ -17,6 +17,7 @@ jobs:
       DATABASE_USER: "stub"
       DATABASE_PASSWORD: "stub"
       DATABASE_NAME: "stub"
+      PASSWORD_PEPPER: "stub"
       JWT_EXPIRATION_TIME: 1
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
     steps:
